@@ -5,9 +5,9 @@ AUTHOR: Adam Wakelin
 
 Last Updated: 2/21/26
 
+In this tutorial, I will walk you through each step of flashing Coreboot Firmware to the MacBook Pro A1278 using an Internal Firmware Descriptor (IFD) hack developed by Evengeny Zinoviev. (gch1p)
 
-
-First, let's open a new system Shell window.
+First, let's open a new Shell window.
 
 Before we can start, we will update our system to ensure that we have the latest packages.
 
@@ -22,7 +22,6 @@ Let's install the packages we will need to read and write to our internal chipse
 >>> sudo apt install coreboot-utils
 
 >>> sudo apt-get install -y bison build-essential curl flex git gnat libncurses-dev libssl-dev zlib1g-dev pkgconf
-
 
 FlashROM may already be installed on your system by default, but this just helps us to confirm. "coreboot-utils" contains FlashROM utilities and a couple of other useful packages we will need.
 
@@ -159,11 +158,11 @@ Visit the URL below to automatically download the archived branch:
 
 Extract your archive to your preferred directory.
 
-***Configuring Coreboot***
+***Configuring A Temporary Bite-Sized Coreboot Image***
 
 In the Shell, switch your working directory to your newly-extracted coreboot folder.
 
->>> cd /home/sudo-judo/PLACEHOLDER
+>>> cd /home/sudo-judo/YourCorebootFolder
 
 Let's build the toolchain we need for x64/x86 chips architectures:
 
@@ -184,15 +183,30 @@ Mainboard -->
        Mainboard Vendor --> Apple
        Mainboard Model --> MacBook 8'1
        ROM Chip Size --> Size of the ROM Chip, measured in Kilobytes. We will set it to 1024 Kilobytes (1 Megabyte)
-       Size of CBFS filesystem in ROM --> oi4hchrihrcoi1nroi1n3ori132oir23rh3klhfwkj FIX THIS
+       Size of CBFS filesystem in ROM --> Set value to "0x1000"
 
 Chipset -->
 
        [*] Add Intel descriptor.bin file --> Set to "YES" and add the file path to your modified Intel Descriptor File
-       [*]   Add Intel ME/TXE firmware __> Set to "YES" and add the file path to your truncated Intel ME file.
-       [ ]     Verify the integrity of the supplied ME/TXE firmware
-       [ ]     Strip down the Intel ME/TXE firmware
-       [ ]  Protect flash regions (Unlock flash regions)
+       [*]   Add Intel ME/TXE firmware --> Set to "YES" and add the file path to your truncated Intel ME file.
+       [ ]     Verify the integrity of the supplied ME/TXE firmware --> Set to "NO".
+       [ ]     Strip down the Intel ME/TXE firmware --> Set to "NO".
+       [ ]  Protect flash regions --> Unlock Flash Regions
+
+Payload --> 
+
+       Payload to add --> Select your payload of choice.
+
+Save and exit. You should be sent back to the Shell. Let's assemble our config file:
+
+>>> make
+
+Our 1024 Kilobyte-sized Coreboot image should be built and located in /build in our Coreboot directory.
+
+Before we can wrte
+
+
+
 
 
 
