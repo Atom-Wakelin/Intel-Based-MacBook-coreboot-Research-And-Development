@@ -1,15 +1,21 @@
-Last Updated: 2/7/26
+
+TITLE: How to Flash Coreboot on a 2010 MacBook Pro 8'1 (A1278)
+
+AUTHOR: Adam Wakelin
+
+Last Updated: 2/21/26
+
 
 
 First, let's open a new system Shell window.
 
-Before we can start, we will update our system to ensure that it is up-to-date. 
+Before we can start, we will update our system to ensure that we have the latest packages.
 
 >>> sudo apt update
 
 >>> sudo apt upgrade
 
-Let's install the packages we will need to read and write to our internal chipset.
+Let's install the packages we will need to read and write to our internal chipset:
 
 >>> sudo apt install flashrom
 
@@ -20,10 +26,7 @@ Let's install the packages we will need to read and write to our internal chipse
 
 FlashROM may already be installed on your system by default, but this just helps us to confirm. "coreboot-utils" contains FlashROM utilities and a couple of other useful packages we will need.
 
-At this time, we should have all of the necessary packages.
-
-Now, we will POWER DOWN our computer, and turn it back on (we want a COLD BOOT, not a restart)
-
+At this time, we should now have all of the necessary packages. Restart your computer.
 
 ***BACKING UP OUR CHIP***
 
@@ -31,19 +34,16 @@ Before we do any writing operations to our chip, we need to make some critical b
 
 Put simply, if you brick your MacBook, you obviously can't operate the keyboard and screen to do any recovery steps. Recovery would have to be done with a second computer, attached directly to the motherboard with a SOIC-8 chip clamp, which can damage a LOT of delicate components. Externally flashing by sending payloads from another computer is very risky on the A1278.
 
-If you are on a computer that supports external flashing, it will be much easier to flash your backup back to the chip if you know what you are doing.
+If you are on a computer that supports external flashing, it will be much easier to flash your backup to the chip if you know what you are doing.
 
-Lets start by dumping our entire chip to a .bin file to serve as a backup. Please save this on a USB or other storage device outside of your computer.
-
+Lets start by dumping our entire chip to a .bin file to serve as a backup. Insert your USB into your computer. We will be backing up our chip and editing our firmware files on it so that it stays seperate from our host machine.
 
 Create a folder on your chosen USB drive and name it something short. I am naming mine "CorebootBackup". Inside, create a .bin file, and name it something easy to remember. I am calling mine "FirmwareOriginalBackup.bin".
-
 
 Now we will save a backup dump of our factory firmware to the empty .bin file.
 
 
 >>> sudo flashrom -p internal -c MX25L6405 -r /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
-
 
 
 Our chip's flash data has now been dumped and saved to the .bin we created.
@@ -59,9 +59,7 @@ Our flash layout should now be in our newly-created text file. Keep in mind, unl
 
 Let's check what's inside:
 
-
 >>> cat FirmwareOriginalBackupLayout.txt
-
 
 It should display something like this:
 
@@ -155,35 +153,46 @@ Now that we have all of the necessary files, we can now flash Coreboot itself, a
 
 We will need an internet connection for this next part. We will be downloading the files we need containing the Coreboot firmware. 
 
-We have two options for this step:
+Visit the URL below to automatically download the archived branch:
 
-1. Download the rolling release (bleeding edge, most recent, directly from git) by running: 
+>>> https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
 
->>> git clone https://review.coreboot.org/coreboot.git
-
-2. Download a stable release archive by navigating the Coreboot.org website.
-
-*I will be installing a stable release copy
-
-To download a Stable Release version, we'll go to Coreboot.org and navigate to the "Downloads" page. Find the Coreboot version date you want to install and click the download icon under the "Source" column. Specify the directory you want to download it to.
-
-@@@ I recommend saving it to your host machine for now. The .tar archive needs to be extracted and it can take a long time if it is saved on the USB. We will move it to our USB after extraction. @@@
-
-Extract your .tar archive in the same directory that it is already in. Don't extract to your USB yet.
-
-
-
+Extract your archive to your preferred directory.
 
 ***Configuring Coreboot***
 
 In the Shell, switch your working directory to your newly-extracted coreboot folder.
 
->>> cd /home/sudo-judo/Downloads/coreboot-25.12
+>>> cd /home/sudo-judo/PLACEHOLDER
 
->>> make i386-toolchain
+Let's build the toolchain we need for x64/x86 chips architectures:
+
+>>> make crossgcc-i386
+
+Now, we will remove the default mainboard preset: (It is set to QEMU emulation by default, so we need to clear that before we can switch to an Apple motherboard)
+
+>>> make distclean
+
+Now for the hard part, where we build our Coreboot image with all of the files we created previously. Use arrow keys to scroll, and type "Y" or "N" to select or deselect options.
+
+@@@ Where [*] is specified, the setting should be set to "YES" and all relevant data must be inputted as described below: @@@
 
 >>> make menuconfig
 
+Mainboard --> 
+
+       Mainboard Vendor --> Apple
+       Mainboard Model --> MacBook 8'1
+       ROM Chip Size --> Size of the ROM Chip, measured in Kilobytes. We will set it to 1024 Kilobytes (1 Megabyte)
+       Size of CBFS filesystem in ROM --> oi4hchrihrcoi1nroi1n3ori132oir23rh3klhfwkj FIX THIS
+
+Chipset -->
+
+       [*] Add Intel descriptor.bin file --> Set to "YES" and add the file path to your modified Intel Descriptor File
+       [*]   Add Intel ME/TXE firmware __> Set to "YES" and add the file path to your truncated Intel ME file.
+       [ ]     Verify the integrity of the supplied ME/TXE firmware
+       [ ]     Strip down the Intel ME/TXE firmware
+       [ ]  Protect flash regions (Unlock flash regions)
 
 
 
