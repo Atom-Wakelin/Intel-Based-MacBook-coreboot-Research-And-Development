@@ -1,9 +1,9 @@
 
-TITLE: How to Flash Coreboot on a 2010 MacBook Pro 8'1 (A1278)
+# How to Flash Coreboot on a 2010 MacBook Pro 8'1 (A1278)
 
-AUTHOR: Adam Wakelin
+## By: Adam Wakelin (@atom-wakelin)
 
-Last Updated: 3/20/26
+## Last Updated: 3/20/26
 
 In this tutorial, I will walk you through each step of flashing Coreboot Firmware to the MacBook Pro A1278 using an Internal Firmware Descriptor (IFD) hack developed by Evengeny Zinoviev. (gch1p)
 
@@ -11,17 +11,22 @@ First, let's open a new Shell window.
 
 Before we can start, we will update our system to ensure that we have the latest packages.
 
-> >>> sudo apt update
+```
+>>> sudo apt update
 
-> >>> sudo apt upgrade
+>>> sudo apt upgrade
+```
 
 Let's install the packages we will need to read and write to our internal chipset:
 
-> >>> sudo apt install flashrom
 
-> >>> sudo apt install coreboot-utils
+```
+>>> sudo apt install flashrom
 
-> >>> sudo apt-get install -y bison build-essential curl flex git gnat libncurses-dev libssl-dev zlib1g-dev pkgconf
+>>> sudo apt install coreboot-utils
+
+>>> sudo apt-get install -y bison build-essential curl flex git gnat libncurses-dev libssl-dev zlib1g-dev pkgconf
+```
 
 FlashROM may already be installed on your system by default, but this just helps us to confirm. "coreboot-utils" contains FlashROM utilities and a couple of other useful packages we will need.
 
@@ -41,47 +46,48 @@ Create a folder on your chosen USB drive and name it something short. I am namin
 
 Now we will save a backup dump of our factory firmware to the empty .bin file.
 
-
-> >>> sudo flashrom -p internal -c MX25L6405 -r /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
-
+```
+>>> sudo flashrom -p internal -c MX25L6405 -r /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
+```
 
 Our chip's flash data has now been dumped and saved to the .bin we created.
 
 
 Using "ifdtool", which we installed earlier through "coreboot-utils", we will write the layout of our backup to a text file so that we can see the layout of our chip's firmware regions.
 
-
-> >>> sudo ifdtool -f FirmwareOriginalBackupLayout.txt /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
-
+```
+>>> sudo ifdtool -f FirmwareOriginalBackupLayout.txt /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
+```
 
 Our flash layout should now be in our newly-created text file. Keep in mind, unless you specified the directory, it will have been created in your /home directory. 
 
 Let's check what's inside:
 
-> >>> cat FirmwareOriginalBackupLayout.txt
+```
+>>> cat FirmwareOriginalBackupLayout.txt
+```
 
 It should display something like this:
 
-       |-----------------------------------
-Line 1 |00000000:00000fff fd
-Line 2 |00181000:007fffff bios
-Line 3 |00001000:00180fff me
-       |-----------------------------------
-
+```
+Line 1: 00000000:00000fff fd
+Line 2: 00181000:007fffff bios
+Line 3: 00001000:00180fff me
+```
 
 Using ifdtool, we will extract these flash regions from our original .bin dump that we saved as a backup earlier.
 
-> >>> ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
+```
+>>> ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
+```
 
 This command should have extracted each flash region to some newly-created files on our system. The names should be as follows:
 
-
-------------------------------------------
+```
 flashregion_0_flashdescriptor.bin
 flashregion_1_bios.bin
 flashregion_2_intel_me.bin
-------------------------------------------
-
+```
 
 Again, they should have been created in our /home. Let's move them to our backup USB for safe-keeping.
 
@@ -94,7 +100,9 @@ After a quick Google, we can find the me_cleaner page on GitHub, which we can do
 
 Now that we have downloaded me_cleaner, we can run it in the Shell to truncate "flashregion_2_intel_me.bin" and shrink it.
 
-> >>> sudo python3 /media/sudo-judo/BACKUPDRIVE/me_cleaner.py -r -t -O flash_region_2_intel_me_truncated.bin /media/sudo-judo/BACKUPDRIVE/CorebootBackup/flashregion_2_intel_me.bin
+```
+>>> sudo python3 /media/sudo-judo/BACKUPDRIVE/me_cleaner.py -r -t -O flash_region_2_intel_me_truncated.bin /media/sudo-judo/BACKUPDRIVE/CorebootBackup/flashregion_2_intel_me.bin
+```
 
 A new file named "flashregion_2_intel_me_truncated.bin" should have been created in your home directory. This is a shrunken copy of your original. Cut and paste the file onto your backup USB. Let's create a new folder for our "modified" files called "CorebootNewFiles".
 
@@ -109,38 +117,43 @@ In our new files folder, (remember, I made one called "CorebootNewFiles) I will 
 
 Now, let's write some new addresses to this text file as shown below:
 
-       -------------------------------
-LINE 1 |00000000:00000fff fd
-LINE 2 |00001000:00020fff me
-LINE 3 |00021000:000fffff bios
-LINE 4 |00100000:007fffff pd
-       -------------------------------
+```
+LINE 1: 00000000:00000fff fd
+LINE 2: 00001000:00020fff me
+LINE 3: 00021000:000fffff bios
+LINE 4: 00100000:007fffff pd
+```
 
 *These addresses are identical to the addresses gch1p uses for his Coreboot IFD hack, which you can find here: 
 
+```
 https://ch1p.io/coreboot-macbook-internal-flashing/
+```
 
 Once done, save the file.
 
 Now, lets use ifdtool on the file to create a new modified version of our original .bin dump file.
 
-> >>> sudo ifdtool -n /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/new_layout.txt /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
-
+```
+>>> sudo ifdtool -n /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/new_layout.txt /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
+```
 
 A new file named "FirmwareOriginalBackup.bin.new" has now been created in the same directory as the original "FirmwareOriginalBackup.bin". Let's move it to our special folder "CorebootNewFiles".
 
 Let's extract the updated flash regions from ""FirmwareOriginalBackup.bin.new".
 
-> >>> sudo ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/FirmwareOriginalBackup.bin.new
+```
+>>> sudo ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/FirmwareOriginalBackup.bin.new
+```
 
 4 files should have been created in your home directory. They should be named as follows:
 
-
-> flashregion_0_flashdescriptor.bin
-> flashregion_1_bios.bin
-> flashregion_2_intel_me.bin
-> flashregion_4_platform_data.bin
-
+```
+LINE 1: flashregion_0_flashdescriptor.bin
+LINE 2:flashregion_1_bios.bin
+LINE 3:flashregion_2_intel_me.bin
+LINE 4:flashregion_4_platform_data.bin
+```
 
 Let's move these files to our USB, in "CorebootNewFiles", our current workspace folder.
 
@@ -154,7 +167,9 @@ We will need an internet connection for this next part. We will be downloading t
 
 Visit the URL below to automatically download the archived branch:
 
-> https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
+```
+>>> https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
+```
 
 Extract your archive to your preferred directory.
 
@@ -162,21 +177,28 @@ Extract your archive to your preferred directory.
 
 In the Shell, switch your working directory to your newly-extracted coreboot folder.
 
-> >>> cd /home/sudo-judo/YourCorebootFolder
+```
+>>> cd /home/sudo-judo/YourCorebootFolder
+```
 
 Let's build the toolchain we need for x64/x86 chips architectures:
 
-> >>> make crossgcc-i386
-
+```
+>>> make crossgcc-i386
+```
 Now, we will remove the default mainboard preset: (It is set to QEMU emulation by default, so we need to clear that before we can switch to an Apple motherboard)
 
-> >>> make distclean
+```
+>>> make distclean
+```
 
 Now for the hard part, where we build our Coreboot image with all of the files we created previously. Use arrow keys to scroll, and type "Y" or "N" to select or deselect options.
 
 **Where [*] is specified, the setting should be set to "YES" and all relevant data must be inputted as described below:**
 
-> >>> make menuconfig
+```
+>>> make menuconfig
+```
 
 **Mainboard** --> 
 
@@ -199,6 +221,8 @@ Now for the hard part, where we build our Coreboot image with all of the files w
 
 Save and exit. You should be sent back to the Shell. Let's assemble our config file:
 
-> >>> make
+```
+>>> make
+```
 
 Our 1024 Kilobyte-sized Coreboot image should be built and located in /build in our Coreboot directory.
