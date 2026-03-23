@@ -1,13 +1,64 @@
 
-# How to Flash Coreboot on a 2010 MacBook Pro 8'1 (A1278)
+# Internally Flashing Coreboot to 2010-2013 MacBooks via IFD Exploit
 
 ## By: Adam Wakelin (@atom-wakelin)
 
-## Last Updated: 3/20/26
+## Last Updated: 3/23/2026
 
-Hello! My name is Adam Wakelin.
+*Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. This would not be possible without their documentation and expertise, which was an essential resource in my research and development process.*
 
-In this tutorial, I will walk you through each step of flashing the open-source firmware known as "Coreboot" to the MacBook Pro A1278 using an *Internal Firmware Descriptor* (IFD) hack developed by *Evengeny Zinoviev. (gch1p)*
+>***Helpful references:***
+
+>[Coreboot FAQ and why you should use Coreboot](https://www.coreboot.org/end_users.html)
+
+>[gch1p's original IFD hack from 2019](https://ch1p.io/coreboot-macbook-internal-flashing/)
+>[The state of Coreboot on MacBooks, by gch1p](https://ch1p.io/coreboot-macbook-support/)
+
+
+>[My Hackaday project page](https://hackaday.io/project/204549-flashing-coreboot-firmware-to-intel-macbooks)
+
+>[My GitHub Research and Development Repository (bleeding edge, most up-to-date)](https://github.com/Atom-Wakelin/Intel-Based-MacBook-coreboot-Research-And-Development)
+
+
+# A Brief Introduction / Purpose
+
+Before we begin, let me introduce myself. My name is Adam Wakelin, an avid GNU/Linux user and FOS enthusiast from San Diego, California, United States. I am passionate about protecting computer privacy and operational security at the software, firmware, and even hardware level.
+
+## ❌ The Issue:
+
+Every computer has ***hardware*** (Keyboard, Screen), ***software*** (Windows, Linux, MacOS) and inbetween, there is ***firmware***, which acts as a middleman between both. ***Firmware*** tells the hardware how to run the software, and the software how to run on the hardware. All three play an essential role in the functioning of a computer.
+
+Unlike hardware and software, users have very little control over their computer's firmware. Computer manufacturers actively obfuscate (hide) the source code and functions of their firmware from end users, and design computers to only run the firmware that the manufacturer approves of.
+
+***The end user can neither see what the firmware is doing, nor modify it without bricking their system.***
+
+Because of this, users of modern computers have no choice but to blindly trust that the firmware they have been forced to run is secure and has their best interests in mind.
+
+## ✅ The Solution:
+
+*Coreboot*, (or "coreboot" when spelled in lowercase, as is preferred by its authors) is Free and Open-Source (FOS) firmware that serves as a replacement for ***proprietary factory firmware.***
+
+Unlike proprietary factory firmware, end users have full access to the source code and the ability to modify/configure it in a multitude of ways. Users know exactly what it does, how it does it, and can rest easy knowing that there are no strings attached.
+
+It is designed be lean, lightweight, and to accomplish the bare necessities of a system boot before passing control of the host machine to a traditional BIOS/UEFI. It is, in many ways, a no-nonsense, straightforward replacement for your factory firmware.
+
+There is a caveat: it aims to replace *as much firmware as **POSSIBLE***, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without. Because of this, sometimes, when we compile Coreboot, (like baking a cookie from a recipe) we sprinkle in the proprietary firmware blobs we need for the system to boot. (like adding chocolate chips) We can make our own cookie dough, (Coreboot) but we still need to add in elements we CAN'T replicate ourselves. (chocolate chips)
+
+In the end, the goal of Coreboot is to replace as much proprietary firmware as possible to give the end user as much control over their firmware as possible.
+
+# What You Will Need:
+
+## 1. A USB for storing your files (FAT32, exFAT...)
+## 2. GNU/Linux Bootable Drive
+## 3. An Internet Connection
+## 4. A corresponding charger for your MacBook
+## 5. A 2010-2013 MacBook of the following models:
+#### MacBook 8'1 (Model #A1278)(✅ TESTED AND CONFIRMED TO WORK)
+#### MacBook Air 4,2 (Model #A1369)(❌ UNTESTED)
+#### MacBook Air 5,2 (Model #A1266)(❌ UNTESTED)
+#### MacBook Pro 10,1 (Model #A1398)(❌ UNTESTED)
+
+>***If your computer has soldered RAM, you will need to make sure your RAM is supported. Please refer to @gch1p's GitHub page [HERE](https://github.com/gch1p/mmga?tab=readme-ov-file#ram-configurations) to verify that your RAM is compatible.***
 
 # Updating/Installing Dependencies
 
@@ -37,7 +88,7 @@ FlashROM may already be installed on your system by default, but this just helps
 
 *At this time, we should now have all of the necessary packages. Restart your computer.*
 
-# BACKING UP OUR CHIP
+# STEP 1: Backing up our factory firmware
 
 ### An important note:
 
@@ -51,7 +102,7 @@ Lets start by dumping our entire chip to a .bin file to serve as a backup. Inser
 
 Create a folder on your chosen USB drive and name it something short. I am naming mine "CorebootBackup". Inside, create a .bin file, and name it something easy to remember. I am calling mine "FirmwareOriginalBackup.bin".
 
-Now we will save a backup dump of our factory firmware to the empty .bin file.
+Now, we will save a backup dump of our factory firmware to the empty .bin file:
 
 ```
 sudo flashrom -p internal -c MX25L6405 -r /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
@@ -99,7 +150,7 @@ flashregion_2_intel_me.bin
 Again, they should have been created in our /home. Let's move them to our backup USB for safe-keeping.
 
 
-# Gutting Intel ME
+# STEP 2: Gutting Intel ME
 
 If you check the size of "flashregion_2_intel_me.bin", you will see that it contains 1.5 Megabytes of data. Using a Python script called "me_cleaner", written by Nicola Corna, ("corna" on GitHub) we can remove as much data from this file as possible and shrink it to by only Kilobytes in size.
 
@@ -118,7 +169,8 @@ If we check the file's properties, we can see that it is only 81.9 Kilobytes, co
 
 Let's copy and paste our Shell text output to our USB for safe-keeping.
 
-# NEW FLASH LAYOUT AND MAKING NEW FILES
+
+# STEP 3: Creating a new flash layout and truncating Intel ME
 
 In our new files folder, (remember, I made one called "CorebootNewFiles) I will create a new layout text file that we will use for our new addresses. I am going to name it "new_layout.txt" so we can keep track of it.
 
@@ -168,7 +220,7 @@ Phew! That was tedious, but if we did everything correctly, we should now have a
 
 Now that we have all of the necessary files, we can now flash Coreboot itself, alongside our custom files.
 
-# Downloading Coreboot Source
+# STEP 4: Downloading Coreboot Source
 
 We will need an internet connection for this next part. We will be downloading the files we need containing the Coreboot firmware. 
 
@@ -180,7 +232,7 @@ https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=t
 
 Extract your archive to your preferred directory.
 
-# Configuring A Temporary Bite-Sized Coreboot Image
+# STEP 5: Configuring A Temporary Bite-Sized Coreboot Image
 
 In the Shell, switch your working directory to your newly-extracted coreboot folder.
 
@@ -210,7 +262,7 @@ make menuconfig
 **Mainboard** --> 
 
        Mainboard Vendor --> Apple
-       Mainboard Model --> MacBook 8'1
+       Mainboard Model --> Your MacBook Model Number
        ROM Chip Size --> Size of the ROM Chip, measured in Kilobytes. We will set it to 1024 Kilobytes (1 Megabyte)
        Size of CBFS filesystem in ROM --> Set value to "0x1000"
 
@@ -233,3 +285,4 @@ make
 ```
 
 Our 1024 Kilobyte-sized Coreboot image should be built and located in /build in our Coreboot directory.
+
