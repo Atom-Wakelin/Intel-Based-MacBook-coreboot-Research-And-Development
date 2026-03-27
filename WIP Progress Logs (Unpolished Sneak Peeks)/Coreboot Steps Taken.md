@@ -2,20 +2,21 @@
 
 ## By: Adam Wakelin (@atom-wakelin)
 
-## Last Updated: 3/24/2026
+## Last Updated: 3/26/2026
 
 *Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. This would not be possible without their documentation and expertise, which was an essential resource in my research and development.*
 
+## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the Coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the Coreboot Project's authors and through testing on my own hardware. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
+
 >## ***Helpful references:***
 
->[Coreboot FAQ and why you should use Coreboot](https://www.coreboot.org/end_users.html)
+>[Coreboot FAQ (What is Coreboot and what does it do?)](https://www.coreboot.org/end_users.html)
 
 >[gch1p's original IFD hack (2019)](https://ch1p.io/coreboot-macbook-internal-flashing/)
 
 >[gch1p's "On the current state of coreboot on MacBooks" (2023)](https://ch1p.io/coreboot-macbook-support/)
 
 >[UEFI Secure Boot Explained](https://tianocore-docs.github.io/Understanding_UEFI_Secure_Boot_Chain/draft/secure_boot_chain_in_uefi/uefi_secure_boot.html)
-
 
 >[My Hackaday project page](https://hackaday.io/project/204549-flashing-coreboot-firmware-to-intel-macbooks)
 
@@ -24,36 +25,65 @@
 
 # A Brief Introduction / Purpose
 
-Before we begin, let me introduce myself. My name is Adam Wakelin, an avid GNU/Linux user and FOSS enthusiast from San Diego, California, United States. I am passionate about protecting computer security at the software, firmware, and even hardware level.
+Before we begin, let me introduce myself. My name is Adam Wakelin, an avid GNU/Linux user and FOS enthusiast from San Diego, California, United States. I am passionate about protecting computer security at the software, firmware, and even hardware level.
 
 ## ❌ The Issue:
 
-Every computer has ***hardware,*** (Keyboard, Screen) ***software*** (Windows, Linux, MacOS) and inbetween, there is ***firmware***, which acts as a middleman between both. ***Firmware*** tells the hardware how to run the software, and the software how to run on the hardware. All three play an essential role in the functioning of a computer.
+Every computer has ***hardware,*** (Keyboard, Screen) ***software*** (Windows, GNU/Linux, MacOS) and inbetween, there is ***firmware***, which acts as a middleman between both. ***Firmware*** tells the hardware how to run the software, and the software how to run on the hardware. All three play an essential role in the functioning of a computer.
 
 Unlike hardware and software, users have very little control over their computer's firmware. Computer manufacturers actively obfuscate (hide) the source code and functions of their firmware from end users, and design computers to only run the firmware that the manufacturer approves of.
 
 ***The end user can neither see what the firmware is doing, nor modify it without bricking their system.***
 
-Because of this, users of modern computers have no choice but to blindly trust that the firmware they have been forced to run is secure and has their best interests in mind.
+Because of this, users of modern computers have no choice but to blindly trust that the firmware they have been forced to run is secure and has their best interests in mind. This is especially important for individuals or contractors that handle sensitive data and need to ensure that there are no security vulnerabilities in their systems that would make them vulnerable to external attackers.
 
 ## ✅ The Solution:
 
 *Coreboot*, (or "coreboot" when spelled in lowercase, as is preferred by its authors) is Free and Open-Source (FOS) firmware that serves as a replacement for ***proprietary factory firmware.***
 
-Unlike proprietary factory firmware, end users have full access to the source code and the ability to modify/configure it in a multitude of ways. Users know exactly what it does, how it does it, and can vet the source code themselves.
+Unlike proprietary factory firmware, end users have full access to the source code and the ability to modify/configure it in a multitude of ways. Users know exactly what it does, how it does it, and can vet the source code for themselves.
 
 Coreboot is designed be lean, lightweight, and to accomplish the bare necessities of a system boot before passing control of the host machine to a traditional BIOS/UEFI. Coreboot only accomplishes the ***necessary*** parts of boot, without the bloat.
 
-There is a caveat: it aims to replace *as much firmware as **POSSIBLE***, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without. Because of this, sometimes, when we compile Coreboot, (like baking a cookie from a recipe) we sprinkle in the proprietary firmware blobs we need for the system to boot. (like adding chocolate chips) We can make our own cookie dough, (Coreboot) but we still need to add in elements we CAN'T replicate ourselves. (chocolate chips)
+There is a caveat: it aims to replace *as much firmware as **POSSIBLE***, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without. Because of this, sometimes, when we compile Coreboot, (like baking a cookie from a recipe) we sprinkle in the proprietary firmware blobs we need for the system to boot. (like adding chocolate chips) We can make our own cookie dough, (Coreboot) but we still need to add in elements we CAN'T replicate ourselves. (chocolate chips / Proprietary blobs)
 
-In the end, the goal of Coreboot is to replace as much proprietary firmware as possible to give the end user as much control over their firmware as possible.
+At the end of the day, the goal of Coreboot is to replace as much proprietary firmware ***as possible*** to give the end user as much control over their firmware as possible.
 
+***⚠️ Something to keep in mind: Coreboot does not work on all systems, and is becoming more difficult to implement on modern hardware that is designed to self-brick when modified. Luckily, there are dozens of older computers that support Coreboot, some of which we will be using in this guide: ⚠️***
 
-# The MacBook IFD Exploit:
+# So, Why Use 2010-2013 MacBooks? (🍎 Bad Apples 🍎)
 
-In this guide, I will be detailing each step of flashing Coreboot to a specific set of Intel-based MacBooks ranging from 2010 to early 2013 that all share a unique vulnerability stemming from Apple's read/write protections in different boot states. 
+Most modern computers have firmware read/write protections implemented by their manufacturer to prevent users from modifying critical system data. Apple is one of these manufacturers.
 
-![BIOS/UEFI chip on Motherboard](/Coreboot%20Steps%20Taken.md/Images/Motherboard/firmwareChip001.png)
+Between 2010-2013, however, Apple manufactured a handful of MacBook models that all share a common vulnerability in their design that we can exploit as an attack vector to write Coreboot to our chip. 
+
+For some reason, these models, due to a bug in their factory firmware, have their write protections disabled when they are activated from a ***cold boot*** state.
+
+I like to refer to the affected models from this time period as ***"Bad Apples".***
+
+***Bad Apples* are good candidates to run Coreboot for a couple of other reasons:**
+
+1. **No extra hardware is needed** - They can be ***Internally Flashed.*** ***Internal Flashing*** is the Coreboot "installation" process that this guide utilizes. (We can put GNU/Linux on our target machine, plus a USB to store our firmware backups, and perform the entire process from the command line on the target machine itself. No extra computers, clamps, or adapters needed.)
+2. **They have good hardware** - Older MacBooks are built very well and are reliable, long-lasting machines. Many can perform just as well as they did nearly 2 decades ago once GNU/Linux is installed.
+3. **They are easy to acquire** - As they are older models, they can be found on sites such as eBay for around $100.00 USD or less. They are very cheap, easy to find, and have thousands of spare parts available for sale. **Think: "Ship of Theseus."**
+
+# The MacBook IFD Exploit Summary of Steps:
+
+***During this guide, we will be performing the following operations:***
+
+1. Back up entire factory firmware to .bin file.
+2. Extract regions from .bin file as a layout in a .txt file.
+3. Split .bin backup into 3 .bin files, one for each region.
+4. Truncate (Shrink) Intel ME .bin file.
+5. Write a new layout .txt file with new region parameters.
+6. Extract regions from new layout .txt file as .bins, one for each region.
+7. Configure temporary Coreboot ROM, write to chip.
+8. Cold boot (Reboot won't work)
+9. Write final layout .txt file
+10. Configure full-size Coreboot ROM
+11. Flash full Coreboot ROM
+12. Fully Corebooted MacBook!
+
 
 # What You Will Need:
 
@@ -62,10 +92,10 @@ In this guide, I will be detailing each step of flashing Coreboot to a specific 
 ## 3. An Internet Connection
 ## 4. A corresponding charger for your MacBook
 ## 5. A 2010-2013 MacBook of the following models:
-#### MacBook 8'1 (Model #A1278)(✅ TESTED AND CONFIRMED TO WORK)
-#### MacBook Air 4,2 (Model #A1369)(❌ UNTESTED)
-#### MacBook Air 5,2 (Model #A1266)(❌ UNTESTED)
-#### MacBook Pro 10,1 (Model #A1398)(❌ UNTESTED)
+#### 💻 MacBook Pro 8'1 (Model #A1278)(✅ TESTED AND CONFIRMED TO WORK)
+#### 💻 MacBook Air 4,2 (Model #A1369)(❌ UNTESTED)
+#### 💻 MacBook Air 5,2 (Model #A1266)(❌ UNTESTED)
+#### 💻 MacBook Pro 10,1 (Model #A1398)(❌ UNTESTED)
 
 >***If your computer has soldered RAM, you will need to make sure your RAM is supported. Please refer to @gch1p's GitHub page [HERE](https://github.com/gch1p/mmga?tab=readme-ov-file#ram-configurations) to verify that your RAM is compatible.***
 
@@ -295,3 +325,8 @@ make
 
 Our 1024 Kilobyte-sized Coreboot image should be built and located in /build in our Coreboot directory.
 
+
+
+
+
+# Work In Progress...
