@@ -2,13 +2,13 @@
 
 ## By: Adam Wakelin (@atom-wakelin)
 
-## Last Updated: 3/26/2026
+## Last Updated: 3/27/2026
 
 *Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. This would not be possible without their documentation and expertise, which was an essential resource in my research and development.*
 
 ## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the Coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the Coreboot Project's authors and through testing on my own hardware. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
 
->## ***Helpful references:***
+>## ***Helpful References:***
 
 >[Coreboot FAQ (What is Coreboot and what does it do?)](https://www.coreboot.org/end_users.html)
 
@@ -53,7 +53,7 @@ At the end of the day, the goal of Coreboot is to replace as much proprietary fi
 
 # So, Why Use 2010-2013 MacBooks? (🍎 Bad Apples 🍎)
 
-Most modern computers have firmware read/write protections implemented by their manufacturer to prevent users from modifying critical system data. Apple is one of these manufacturers.
+Most modern computers have firmware read/write protections implemented by their manufacturer to prevent users from modifying critical system data. Apple, like other computer manufacturers, also took steps to include read/write protections on their firmware.
 
 Between 2010-2013, however, Apple manufactured a handful of MacBook models that all share a common vulnerability in their design that we can exploit as an attack vector to write Coreboot to our chip. 
 
@@ -84,7 +84,6 @@ I like to refer to the affected models from this time period as ***"Bad Apples".
 11. Flash full Coreboot ROM
 12. Fully Corebooted MacBook!
 
-
 # What You Will Need:
 
 ## 1. A USB for storing your files (FAT32, exFAT...)
@@ -92,12 +91,24 @@ I like to refer to the affected models from this time period as ***"Bad Apples".
 ## 3. An Internet Connection
 ## 4. A corresponding charger for your MacBook
 ## 5. A 2010-2013 MacBook of the following models:
-#### 💻 MacBook Pro 8'1 (Model #A1278)(✅ TESTED AND CONFIRMED TO WORK)
-#### 💻 MacBook Air 4,2 (Model #A1369)(❌ UNTESTED)
-#### 💻 MacBook Air 5,2 (Model #A1266)(❌ UNTESTED)
-#### 💻 MacBook Pro 10,1 (Model #A1398)(❌ UNTESTED)
+#### 💻 MacBook Pro 8'1 (Model #A1278)(✅ Internal Flashing TESTED AND CONFIRMED TO WORK)
+#### 💻 MacBook Air 4,2 (Model #A1369)(❌ Internal Flashing UNTESTED but should work)
+#### 💻 MacBook Air 5,2 (Model #A1266)(❌ Internal Flashing UNTESTED but should work)
+#### 💻 MacBook Pro 10,1 (Model #A1398)(❌ Internal Flashing UNTESTED but should work)
 
->***If your computer has soldered RAM, you will need to make sure your RAM is supported. Please refer to @gch1p's GitHub page [HERE](https://github.com/gch1p/mmga?tab=readme-ov-file#ram-configurations) to verify that your RAM is compatible.***
+>***⚠️ If your computer has soldered RAM, you will need to make sure your RAM is supported. Please refer to @gch1p's GitHub page [HERE](https://github.com/gch1p/mmga?tab=readme-ov-file#ram-configurations) to verify that your RAM is compatible. ⚠️***
+
+*Please let me know on my GitHub or Hackaday page if you successfully flash Coreboot to an untested model so that I can port this guide to it.*
+
+# Preparing your MacBook:
+
+1. Plug your MacBook into a source of power. (*STEADY* power source, like a wall outlet)
+
+2. Boot from a GNU/Linux drive. (GNU/Linux on the internal hard drive or on a bootable USB stick) I will be using a Debian-based distribution, so Shell commands may vary.
+
+3. Plug in your USB storage device, which you will use to store all of your backups and will serve as your working directory.
+   
+4. Connect to the Internet (Used to build utilities and Coreboot source)
 
 # Updating/Installing Dependencies
 
@@ -110,7 +121,7 @@ sudo apt update
 sudo apt upgrade
 ```
 
-Let's install the packages we will need to read and write to our internal chipset:
+Let's install the packages we will need to read/write to our internal chipset:
 
 
 ```
@@ -123,21 +134,30 @@ sudo apt install coreboot-utils
 sudo apt-get install -y bison build-essential curl flex git gnat libncurses-dev libssl-dev zlib1g-dev pkgconf
 ```
 
-FlashROM may already be installed on your system by default, but this just helps us to confirm. "coreboot-utils" contains FlashROM utilities and a couple of other useful packages we will need.
+FlashROM may already be installed on your system by default, but this just helps us to confirm that it is on our system and installed in full. "coreboot-utils" contains FlashROM utilities and a couple of other useful packages we will need.
 
 *At this time, we should now have all of the necessary packages. Restart your computer.*
 
-# STEP 1: Backing up our factory firmware
+# ⚠️ DANGER! AN IMPORTANT NOTE: ⚠️
 
-### An important note:
+Before we do any writing operations to our chip, we need to make some critical backups so that we can restore our machine in the event of a ***flash failure***. A *flash failure* occurs if we make an error when we write our Coreboot image to our chip, which may cause it to boot incorrectly. This may result in our system be completely bricked.
 
-Before we do any writing operations to our chip, we need to make some critical backups so that we can restore our machine in the event of a flash failure. There is one caveat to this: I am currently using the MacBook A1278, which is very difficult to externally flash. If you brick this model, it is very difficult to recover.
+We can reduce the risk of bricking our MacBook by backing up the ***Factory Firmware*** to our USB storage device. (So we can get the firmware backup if the computer is compromised)
 
-Put simply, if you brick your MacBook, you obviously can't operate the keyboard and screen to do any recovery steps. Recovery would have to be done with a second computer, attached directly to the motherboard with a SOIC-8 chip clamp, which can damage a LOT of delicate components. Externally flashing by sending payloads from another computer is very risky on the A1278.
+Put simply, if you brick your MacBook, you may not be able to operate the keyboard and screen to reflash and recover your chip. If this happens, the only way to recover your MacBook is to ***EXTERNALLY FLASH*** it with a second computer. 
 
-If you are on a computer that supports external flashing, it will be much easier to flash your backup to the chip if you know what you are doing.
+This would involve attaching clamps directly to your MacBook's motherboard and flashing your firmware backup directly to your chip from the second computer.
 
-Lets start by dumping our entire chip to a .bin file to serve as a backup. Insert your USB into your computer. We will be backing up our chip and editing our firmware files on it so that it stays seperate from our host machine.
+***I will write an external flashing guide in the future if enough people request it.***
+
+Unfortunately, this is easier said than done. Some MacBook models support external flashing, but some do not. You can find a list of supported MacBooks [***HERE.***](https://ch1p.io/coreboot-macbook-support/)
+
+
+## ⚠️ Regardless of whether or not your MacBook supports ***EXTERNAL FLASHING*** or not, treat this procedure as if you only have ***1 shot*** and ***NO DO-OVERS.*** ⚠️
+
+# STEP 1: Backing Up Our Factory Firmware
+
+Lets start by dumping our entire chip to a .bin file to serve as a backup. Insert your USB storage device into your computer. We will be backing up our chip and editing our firmware files on it so that it stays seperate from our host machine. 
 
 Create a folder on your chosen USB drive and name it something short. I am naming mine "CorebootBackup". Inside, create a .bin file, and name it something easy to remember. I am calling mine "FirmwareOriginalBackup.bin".
 
@@ -189,7 +209,7 @@ flashregion_2_intel_me.bin
 Again, they should have been created in our /home. Let's move them to our backup USB for safe-keeping.
 
 
-# STEP 2: Gutting Intel ME
+# STEP 2: Gutting Intel ME Region
 
 If you check the size of "flashregion_2_intel_me.bin", you will see that it contains 1.5 Megabytes of data. Using a Python script called "me_cleaner", written by Nicola Corna, ("corna" on GitHub) we can remove as much data from this file as possible and shrink it to by only Kilobytes in size.
 
@@ -204,12 +224,11 @@ sudo python3 /media/sudo-judo/BACKUPDRIVE/me_cleaner.py -r -t -O flash_region_2_
 A new file named "flashregion_2_intel_me_truncated.bin" should have been created in your home directory. This is a shrunken copy of your original. Cut and paste the file onto your backup USB. Let's create a new folder for our "modified" files called "CorebootNewFiles".
 
 
-If we check the file's properties, we can see that it is only 81.9 Kilobytes, compared to the original 1.5 Megabytes. Success! We have surgically neutered our Intel ME file!
+If we check the file's properties, we can see that it is only 81.9 Kilobytes, compared to the original 1.5 Megabytes. Success! The Intel ME region file has been truncated!
 
 Let's copy and paste our Shell text output to our USB for safe-keeping.
 
-
-# STEP 3: Creating a new flash layout and truncating Intel ME
+# STEP 3: Creating A New flash Layout
 
 In our new files folder, (remember, I made one called "CorebootNewFiles) I will create a new layout text file that we will use for our new addresses. I am going to name it "new_layout.txt" so we can keep track of it.
 
@@ -222,23 +241,19 @@ LINE 3: 00021000:000fffff bios
 LINE 4: 00100000:007fffff pd
 ```
 
-*These addresses are identical to the addresses gch1p uses for his Coreboot IFD hack, which you can find here: 
+*These addresses are identical to the addresses gch1p uses for his Coreboot IFD hack, which you can find [HERE.](https://ch1p.io/coreboot-macbook-internal-flashing/)
 
-```
-https://ch1p.io/coreboot-macbook-internal-flashing/
-```
+Once done, save the text file.
 
-Once done, save the file.
-
-Now, lets use ifdtool on the file to create a new modified version of our original .bin dump file.
+Now, lets use ***ifdtool*** on the file to create a new modified version of our original .bin dump file.
 
 ```
 sudo ifdtool -n /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/new_layout.txt /media/sudo-judo/BACKUPDRIVE/CorebootBackup/FirmwareOriginalBackup.bin
 ```
 
-A new file named "FirmwareOriginalBackup.bin.new" has now been created in the same directory as the original "FirmwareOriginalBackup.bin". Let's move it to our special folder "CorebootNewFiles".
+A new file named ***"FirmwareOriginalBackup.bin.new"*** has now been created in the same directory as the original "FirmwareOriginalBackup.bin". Let's move it to our special folder ***"CorebootNewFiles".***
 
-Let's extract the updated flash regions from ""FirmwareOriginalBackup.bin.new".
+Let's extract the updated flash regions from ***"FirmwareOriginalBackup.bin.new".***
 
 ```
 sudo ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/FirmwareOriginalBackup.bin.new
@@ -253,9 +268,9 @@ LINE 3: flashregion_2_intel_me.bin
 LINE 4: flashregion_4_platform_data.bin
 ```
 
-Let's move these files to our USB, in "CorebootNewFiles", our current workspace folder.
+Let's move these files to our USB, in ***"CorebootNewFiles"***, our current workspace folder.
 
-Phew! That was tedious, but if we did everything correctly, we should now have a copy of our original chip firmware stored in "CorebootBackup", and all of the modified copies we will use for our custom firmware image stored in "CorebootNewFiles", both of which are now safely on our USB.
+Phew! That was tedious, but if we did everything correctly, we should now have a copy of our original chip firmware stored in ***"CorebootBackup"***, and all of the modified copies we will use for our custom firmware image stored in "CorebootNewFiles", both of which are now safely on our USB.
 
 Now that we have all of the necessary files, we can now flash Coreboot itself, alongside our custom files.
 
@@ -269,7 +284,7 @@ Visit the URL below to automatically download the archived branch:
 https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
 ```
 
-Extract your archive to your preferred directory.
+Extract your archive to your preferred directory. Don't move it to your storage USB just yet, as the build process may take longer if the read/write speed is impeded by the USB data bottleneck.
 
 # STEP 5: Configuring A Temporary Bite-Sized Coreboot Image
 
@@ -290,9 +305,13 @@ Now, we will remove the default mainboard preset: (It is set to QEMU emulation b
 make distclean
 ```
 
-Now for the hard part, where we build our Coreboot image with all of the files we created previously. Use arrow keys to scroll, and type "Y" or "N" to select or deselect options.
+Now for the hard part, where we build our Coreboot image with all of the files we created previously. Use arrow keys to scroll, and the **"Y"** or **"N"** keys to select or deselect options.
 
-**Where [*] is specified, the setting should be set to "YES" and all relevant data must be inputted as described below:**
+**Where [*] is specified, the setting should be set to "Y"**
+
+**Where [ ] is specified, the setting should be set to "N"**
+
+⚠️ All relevant data must be inputted exactly as described below: ⚠️
 
 ```
 make menuconfig
