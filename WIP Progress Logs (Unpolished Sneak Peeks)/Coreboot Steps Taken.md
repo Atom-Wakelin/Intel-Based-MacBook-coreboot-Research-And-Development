@@ -2,11 +2,11 @@
 
 ## By: Adam Wakelin (@atom-wakelin)
 
-## Last Updated: 3/27/2026
+## Last Updated: 5/26/2026
 
-*Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. This would not be possible without their documentation and expertise, which was an essential resource in my research and development.*
+*Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. A significant amount of my research came from their written documentation and expertise. This guide is representative of my goal of making Coreboot easier to understand and accessible to as many users as possible, but it would not have been possible without their work.*
 
-## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the Coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the Coreboot Project's authors and through testing on my own hardware. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
+## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the Coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the Coreboot Project's authors and through testing on my own hardware. If you have any concerns or notice an errors that I have made, please let me know. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
 
 >## ***Helpful References:***
 
@@ -14,7 +14,7 @@
 
 >[gch1p's original IFD hack (2019)](https://ch1p.io/coreboot-macbook-internal-flashing/)
 
->[gch1p's "On the current state of coreboot on MacBooks" (2023)](https://ch1p.io/coreboot-macbook-support/)
+>[gch1p's "On the current state of coreboot on MacBooks" (2023) This guide explains which MacBook models are compatible with Coreboot and the available installation methods on each.](https://ch1p.io/coreboot-macbook-support/)
 
 >[UEFI Secure Boot Explained](https://tianocore-docs.github.io/Understanding_UEFI_Secure_Boot_Chain/draft/secure_boot_chain_in_uefi/uefi_secure_boot.html)
 
@@ -25,7 +25,7 @@
 
 # A Brief Introduction / Purpose
 
-Before we begin, let me introduce myself. My name is Adam Wakelin, an avid GNU/Linux user and FOS enthusiast from San Diego, California, United States. I am passionate about protecting computer security at the software, firmware, and even hardware level.
+Before we begin, let me introduce myself. My name is Adam Wakelin, an avid GNU/Linux user and a Free/Open-Source software enthusiast from San Diego, California, United States. I am passionate about protecting computer security at the software, firmware, and even hardware level.
 
 ## ❌ The Issue:
 
@@ -33,7 +33,7 @@ Every computer has ***hardware,*** (Keyboard, Screen) ***software*** (Windows, G
 
 Unlike hardware and software, users have very little control over their computer's firmware. Computer manufacturers actively obfuscate (hide) the source code and functions of their firmware from end users, and design computers to only run the firmware that the manufacturer approves of.
 
-***The end user can neither see what the firmware is doing, nor modify it without bricking their system.***
+***In many cases, the end user can neither see what the firmware is doing, nor modify it without bricking their system.***
 
 Because of this, users of modern computers have no choice but to blindly trust that the firmware they have been forced to run is secure and has their best interests in mind. This is especially important for individuals or contractors that handle sensitive data and need to ensure that there are no security vulnerabilities in their systems that would make them vulnerable to external attackers.
 
@@ -45,9 +45,23 @@ Unlike proprietary factory firmware, end users have full access to the source co
 
 Coreboot is designed be lean, lightweight, and to accomplish the bare necessities of a system boot before passing control of the host machine to a traditional BIOS/UEFI. Coreboot only accomplishes the ***necessary*** parts of boot, without the bloat.
 
-There is a caveat: it aims to replace *as much firmware as **POSSIBLE***, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without. Because of this, sometimes, when we compile Coreboot, (like baking a cookie from a recipe) we sprinkle in the proprietary firmware blobs we need for the system to boot. (like adding chocolate chips) We can make our own cookie dough, (Coreboot) but we still need to add in elements we CAN'T replicate ourselves. (chocolate chips / Proprietary blobs)
 
-At the end of the day, the goal of Coreboot is to replace as much proprietary firmware ***as possible*** to give the end user as much control over their firmware as possible.
+## 🍪 The Cookie Analogy:
+
+There is a caveat to all of this: Coreboot aims to replace as much firmware as **POSSIBLE**, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without.
+
+**Because of this, Coreboot is able to run on more systems, because instead of cutting out all proprietary firmware, it uses bits and pieces (blobs) of proprietary firmware that let it run on more computers.**
+
+Building Coreboot is like baking chocolate chip cookies. Instead of making it from a recipe, you download it and compile it yourself by following the documentation!
+
+As much as you would like to make all of the ingredients yourself, you still need to use ingredients that will make it more appealing to more people: like chocolate chips! (proprietary blobs!) Most people want chocolate chips on their chocolate chip cookie, so it makes sense to use ingredients we don't make ourselves so that more people can enjoy it! (More systems can run it with blobs than without!)
+
+Using ingredients we don't make ourselves doesn't detract from our hard work: it enhances it, because we still made the majority of the cookie ourselves with our own ingredients, and by adding something that we can' replicate ourselves, more people can enjoy it.
+
+At the end of the day, the goal of Coreboot is to replace as much proprietary firmware ***as possible*** to give the end user as much control over their firmware ***as possible.***
+
+We can't always replace 100% of the firmware with Free and Open-Source Alternatives, but we can get as close as possible.
+
 
 ***⚠️ Something to keep in mind: Coreboot does not work on all systems, and is becoming more difficult to implement on modern hardware that is designed to self-brick when modified. Luckily, there are dozens of older computers that support Coreboot, some of which we will be using in this guide: ⚠️***
 
@@ -59,7 +73,7 @@ Between 2010-2013, however, Apple manufactured a handful of MacBook models that 
 
 For some reason, these models, due to a bug in their factory firmware, have their write protections disabled when they are activated from a ***cold boot*** state.
 
-I like to refer to the affected models from this time period as ***"Bad Apples".***
+For simplicity's sake, I like to refer to the affected models from this time period as ***"Bad Apples".***
 
 ***Bad Apples* are good candidates to run Coreboot for a couple of other reasons:**
 
@@ -89,7 +103,7 @@ I like to refer to the affected models from this time period as ***"Bad Apples".
 ## 1. A USB for storing your files (FAT32, exFAT...)
 ## 2. GNU/Linux Bootable Drive
 ## 3. An Internet Connection
-## 4. A corresponding charger for your MacBook
+## 4. A charger compatible with your MacBook
 ## 5. A 2010-2013 MacBook of the following models:
 #### 💻 MacBook Pro 8'1 (Model #A1278)(✅ Internal Flashing TESTED AND CONFIRMED TO WORK)
 #### 💻 MacBook Air 4,2 (Model #A1369)(❌ Internal Flashing UNTESTED but should work)
@@ -102,7 +116,7 @@ I like to refer to the affected models from this time period as ***"Bad Apples".
 
 # Preparing your MacBook:
 
-1. Plug your MacBook into a source of power. (*STEADY* power source, like a wall outlet)
+1. Plug your MacBook into a source of power. (preferably a *STEADY* power source, like a wall outlet)
 
 2. Boot from a GNU/Linux drive. (GNU/Linux on the internal hard drive or on a bootable USB stick) I will be using a Debian-based distribution, so Shell commands may vary.
 
@@ -284,7 +298,7 @@ Visit the URL below to automatically download the archived branch:
 https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
 ```
 
-Extract your archive to your preferred directory. Don't move it to your storage USB just yet, as the build process may take longer if the read/write speed is impeded by the USB data bottleneck.
+Extract your archive to your preferred directory. Don't move it to your storage USB just yet, as the build process may take longer if the read/write speed is impeded by the USB data bottleneck if it is USB 2.0 or below.
 
 # STEP 5: Configuring A Temporary Bite-Sized Coreboot Image
 
