@@ -2,19 +2,19 @@
 
 ## By: Adam Wakelin (@atom-wakelin)
 
-## Last Updated: 5/26/2026
+## Last Updated: 9/9/2026
 
-*Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the Coreboot project. A significant amount of my research came from their written documentation and expertise. This guide is representative of my goal of making Coreboot easier to understand and accessible to as many users as possible, but it would not have been possible without their work.*
+*Special thanks to Evgeny Zinoviev (@gch1p) and the dedicated authors of the coreboot project. A significant amount of my research came from their written documentation and expertise. This guide is representative of my goal of making coreboot easier to understand and accessible to as many users as possible, but it would not have been possible without their work.*
 
-## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the Coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the Coreboot Project's authors and through testing on my own hardware. If you have any concerns or notice an errors that I have made, please let me know. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
+## ⚠️ ***DISCLAIMER:*** I am an independent author that is not affiliated with the coreboot Project. (Maybe one day) I have taken the time to research and develop this guide using resources originally written by the coreboot Project's authors and through testing on my own hardware. If you have any concerns or notice an errors that I have made, please let me know. I am not responsible for any damage to devices that have undergone this procedure. Use at your own risk. ⚠️
 
 >## ***Helpful References:***
 
->[Coreboot FAQ (What is Coreboot and what does it do?)](https://www.coreboot.org/end_users.html)
+>[coreboot FAQ (What is coreboot and what does it do?)](https://www.coreboot.org/end_users.html)
 
 >[gch1p's original IFD hack (2019)](https://ch1p.io/coreboot-macbook-internal-flashing/)
 
->[gch1p's "On the current state of coreboot on MacBooks" (2023) This guide explains which MacBook models are compatible with Coreboot and the available installation methods on each.](https://ch1p.io/coreboot-macbook-support/)
+>[gch1p's "On the current state of coreboot on MacBooks" (2023) This guide explains which MacBook models are compatible with coreboot and the available installation methods on each.](https://ch1p.io/coreboot-macbook-support/)
 
 >[UEFI Secure Boot Explained](https://tianocore-docs.github.io/Understanding_UEFI_Secure_Boot_Chain/draft/secure_boot_chain_in_uefi/uefi_secure_boot.html)
 
@@ -39,45 +39,45 @@ Because of this, users of modern computers have no choice but to blindly trust t
 
 ## ✅ The Solution:
 
-*Coreboot*, (or "coreboot" when spelled in lowercase, as is preferred by its authors) is Free and Open-Source (FOS) firmware that serves as a replacement for ***proprietary factory firmware.***
+*Coreboot*, (or "coreboot" when spelled in lowercase, as is preferred by its authors) is Free and Open-Source (FOS) firmware that serves as a substitute for ***proprietary factory firmware.***
 
 Unlike proprietary factory firmware, end users have full access to the source code and the ability to modify/configure it in a multitude of ways. Users know exactly what it does, how it does it, and can vet the source code for themselves.
 
-Coreboot is designed be lean, lightweight, and to accomplish the bare necessities of a system boot before passing control of the host machine to a traditional BIOS/UEFI. Coreboot only accomplishes the ***necessary*** parts of boot, without the bloat.
+coreboot is designed be lean, lightweight, and to accomplish the bare necessities of a system boot before passing control of the host machine to a traditional BIOS/UEFI. coreboot only accomplishes the ***necessary*** parts of boot, without the bloat.
 
 
 ## 🍪 The Cookie Analogy:
 
-There is a caveat to all of this: Coreboot aims to replace as much firmware as **POSSIBLE**, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without.
+There is a caveat to all of this: coreboot aims to replace as much firmware as **POSSIBLE**, aside from necessary proprietary pieces of firmware referred to as "blobs", which, due to the way manufacturers have designed their machines, most systems will not boot without.
 
-**Because of this, Coreboot is able to run on more systems, because instead of cutting out all proprietary firmware, it uses bits and pieces (blobs) of proprietary firmware that let it run on more computers.**
+**Because of this, coreboot is able to run on more systems, because instead of cutting out all proprietary firmware, it uses bits and pieces (blobs) of proprietary firmware that let it run on more computers.**
 
-Building Coreboot is like baking chocolate chip cookies. Instead of making it from a recipe, you download it and compile it yourself by following the documentation!
+Building coreboot is like baking chocolate chip cookies. Instead of making it from a recipe, you download it and compile it yourself by following the documentation!
 
 As much as you would like to make all of the ingredients yourself, you still need to use ingredients that will make it more appealing to more people: like chocolate chips! (proprietary blobs!) Most people want chocolate chips on their chocolate chip cookie, so it makes sense to use ingredients we don't make ourselves so that more people can enjoy it! (More systems can run it with blobs than without!)
 
 Using ingredients we don't make ourselves doesn't detract from our hard work: it enhances it, because we still made the majority of the cookie ourselves with our own ingredients, and by adding something that we can' replicate ourselves, more people can enjoy it.
 
-At the end of the day, the goal of Coreboot is to replace as much proprietary firmware ***as possible*** to give the end user as much control over their firmware ***as possible.***
+At the end of the day, the goal of coreboot is to replace as much proprietary firmware ***as possible*** to give the end user as much control over their firmware ***as possible.***
 
 We can't always replace 100% of the firmware with Free and Open-Source Alternatives, but we can get as close as possible.
 
 
-***⚠️ Something to keep in mind: Coreboot does not work on all systems, and is becoming more difficult to implement on modern hardware that is designed to self-brick when modified. Luckily, there are dozens of older computers that support Coreboot, some of which we will be using in this guide: ⚠️***
+***⚠️ Something to keep in mind: coreboot does not work on all systems, and is becoming more difficult to implement on modern hardware that is designed to self-brick when modified. Luckily, there are dozens of older computers that support coreboot, some of which we will be using in this guide: ⚠️***
 
 # So, Why Use 2010-2013 MacBooks? (🍎 Bad Apples 🍎)
 
 Most modern computers have firmware read/write protections implemented by their manufacturer to prevent users from modifying critical system data. Apple, like other computer manufacturers, also took steps to include read/write protections on their firmware.
 
-Between 2010-2013, however, Apple manufactured a handful of MacBook models that all share a common vulnerability in their design that we can exploit as an attack vector to write Coreboot to our chip. 
+Between 2010-2013, however, Apple manufactured a handful of MacBook models that all share a common vulnerability in their design that we can exploit as an attack vector to write coreboot to our chip. 
 
 For some reason, these models, due to a bug in their factory firmware, have their write protections disabled when they are activated from a ***cold boot*** state.
 
 For simplicity's sake, I like to refer to the affected models from this time period as ***"Bad Apples".***
 
-***Bad Apples* are good candidates to run Coreboot for a couple of other reasons:**
+***Bad Apples* are good candidates to run coreboot for a couple of other reasons:**
 
-1. **No extra hardware is needed** - They can be ***Internally Flashed.*** ***Internal Flashing*** is the Coreboot "installation" process that this guide utilizes. (We can put GNU/Linux on our target machine, plus a USB to store our firmware backups, and perform the entire process from the command line on the target machine itself. No extra computers, clamps, or adapters needed.)
+1. **No extra hardware is needed** - They can be ***Internally Flashed.*** ***Internal Flashing*** is the coreboot "installation" process that this guide utilizes. (We can put GNU/Linux on our target machine, plus a USB to store our firmware backups, and perform the entire process from the command line on the target machine itself. No extra computers, clamps, or adapters needed.)
 2. **They have good hardware** - Older MacBooks are built very well and are reliable, long-lasting machines. Many can perform just as well as they did nearly 2 decades ago once GNU/Linux is installed.
 3. **They are easy to acquire** - As they are older models, they can be found on sites such as eBay for around $100.00 USD or less. They are very cheap, easy to find, and have thousands of spare parts available for sale. **Think: "Ship of Theseus."**
 
@@ -91,19 +91,19 @@ For simplicity's sake, I like to refer to the affected models from this time per
 4. Truncate (Shrink) Intel ME .bin file.
 5. Write a new layout .txt file with new region parameters.
 6. Extract regions from new layout .txt file as .bins, one for each region.
-7. Configure temporary Coreboot ROM, write to chip.
+7. Configure temporary coreboot ROM, write to chip.
 8. Cold boot (Reboot won't work)
 9. Write final layout .txt file
-10. Configure full-size Coreboot ROM
-11. Flash full Coreboot ROM
-12. Fully Corebooted MacBook!
+10. Configure full-size coreboot ROM
+11. Flash full coreboot ROM
+12. Fully corebooted MacBook!
 
 # What You Will Need:
 
 ## 1. A USB for storing your files (FAT32, exFAT...)
-## 2. GNU/Linux Bootable Drive
-## 3. An Internet Connection
-## 4. A charger compatible with your MacBook
+## 2. GNU/Linux Bootable Drive (either put it on the internal disk or on a USB)
+## 3. An Internet Connection (To download files)
+## 4. A charger compatible with your MacBook (Process may take more than an hour)
 ## 5. A 2010-2013 MacBook of the following models:
 #### 💻 MacBook Pro 8'1 (Model #A1278)(✅ Internal Flashing TESTED AND CONFIRMED TO WORK)
 #### 💻 MacBook Air 4,2 (Model #A1369)(❌ Internal Flashing UNTESTED but should work)
@@ -112,7 +112,7 @@ For simplicity's sake, I like to refer to the affected models from this time per
 
 >***⚠️ If your computer has soldered RAM, you will need to make sure your RAM is supported. Please refer to @gch1p's GitHub page [HERE](https://github.com/gch1p/mmga?tab=readme-ov-file#ram-configurations) to verify that your RAM is compatible. ⚠️***
 
-*Please let me know on my GitHub or Hackaday page if you successfully flash Coreboot to an untested model so that I can port this guide to it.*
+*Please let me know on my GitHub or Hackaday page if you successfully flash coreboot to an untested model so that I can port this guide to it.*
 
 # Preparing your MacBook:
 
@@ -122,7 +122,7 @@ For simplicity's sake, I like to refer to the affected models from this time per
 
 3. Plug in your USB storage device, which you will use to store all of your backups and will serve as your working directory.
    
-4. Connect to the Internet (Used to build utilities and Coreboot source)
+4. Connect to the Internet (Used to build utilities and coreboot source)
 
 # Updating/Installing Dependencies
 
@@ -154,7 +154,7 @@ FlashROM may already be installed on your system by default, but this just helps
 
 # ⚠️ DANGER! AN IMPORTANT NOTE: ⚠️
 
-Before we do any writing operations to our chip, we need to make some critical backups so that we can restore our machine in the event of a ***flash failure***. A *flash failure* occurs if we make an error when we write our Coreboot image to our chip, which may cause it to boot incorrectly. This may result in our system be completely bricked.
+Before we do any writing operations to our chip, we need to make some critical backups so that we can restore our machine in the event of a ***flash failure***. A *flash failure* occurs if we make an error when we write our coreboot image to our chip, which may cause it to boot incorrectly. This may result in our system be completely bricked.
 
 We can reduce the risk of bricking our MacBook by backing up the ***Factory Firmware*** to our USB storage device. (So we can get the firmware backup if the computer is compromised)
 
@@ -201,9 +201,9 @@ cat FirmwareOriginalBackupLayout.txt
 It should display something like this:
 
 ```
-Line 1: 00000000:00000fff fd
-Line 2: 00181000:007fffff bios
-Line 3: 00001000:00180fff me
+Line 1: | 00000000:00000fff fd
+Line 2: | 00181000:007fffff bios
+Line 3: | 00001000:00180fff me
 ```
 
 Using ifdtool, we will extract these flash regions from our original .bin dump that we saved as a backup earlier.
@@ -249,13 +249,13 @@ In our new files folder, (remember, I made one called "CorebootNewFiles) I will 
 Now, let's write some new addresses to this text file as shown below:
 
 ```
-LINE 1: 00000000:00000fff fd
-LINE 2: 00001000:00020fff me
-LINE 3: 00021000:000fffff bios
-LINE 4: 00100000:007fffff pd
+LINE 1: | 00000000:00000fff fd
+LINE 2: | 00001000:00020fff me
+LINE 3: | 00021000:000fffff bios
+LINE 4: | 00100000:007fffff pd
 ```
 
-*These addresses are identical to the addresses gch1p uses for his Coreboot IFD hack, which you can find [HERE.](https://ch1p.io/coreboot-macbook-internal-flashing/)
+*These addresses are identical to the addresses gch1p uses for his coreboot IFD hack, which you can find [HERE.](https://ch1p.io/coreboot-macbook-internal-flashing/)
 
 Once done, save the text file.
 
@@ -276,36 +276,36 @@ sudo ifdtool -x /media/sudo-judo/BACKUPDRIVE/CorebootNewFiles/FirmwareOriginalBa
 4 files should have been created in your home directory. They should be named as follows:
 
 ```
-LINE 1: flashregion_0_flashdescriptor.bin
-LINE 2: flashregion_1_bios.bin
-LINE 3: flashregion_2_intel_me.bin
-LINE 4: flashregion_4_platform_data.bin
+LINE 1: | flashregion_0_flashdescriptor.bin
+LINE 2: | flashregion_1_bios.bin
+LINE 3: | flashregion_2_intel_me.bin
+LINE 4: | flashregion_4_platform_data.bin
 ```
 
 Let's move these files to our USB, in ***"CorebootNewFiles"***, our current workspace folder.
 
 Phew! That was tedious, but if we did everything correctly, we should now have a copy of our original chip firmware stored in ***"CorebootBackup"***, and all of the modified copies we will use for our custom firmware image stored in "CorebootNewFiles", both of which are now safely on our USB.
 
-Now that we have all of the necessary files, we can now flash Coreboot itself, alongside our custom files.
+Now that we have all of the necessary files, we can now flash coreboot itself, alongside our custom files.
 
-# STEP 4: Downloading Coreboot Source
+# STEP 4: Downloading coreboot Source
 
-We will need an internet connection for this next part. We will be downloading the files we need containing the Coreboot firmware. 
+We will need an internet connection for this next part. We will be downloading the files we need containing the coreboot firmware.
 
-Visit the URL below to automatically download the archived branch:
+If you are targetting the A1278, (MacBook 8'1) use this archived branch so that the "A1278" option will be available in the build process. It won't be visible by default in the main branch.
 
 ```
 https://review.coreboot.org/changes/coreboot~33151/revisions/24/archive?format=tgz
 ```
 
-Extract your archive to your preferred directory. Don't move it to your storage USB just yet, as the build process may take longer if the read/write speed is impeded by the USB data bottleneck if it is USB 2.0 or below.
+Extract your archive to your preferred directory. Don't move it to your storage USB just yet, as the build process may take longer if the read/write speed is impeded by the USB data bottleneck if it is USB 2.0 or below. The archive contains all of the necessary blobs, build tools, and software to assemble our coreboot instance, but it takes a while (sometimes up to an hour) to initialize your archive before you can start the build process.
 
-# STEP 5: Configuring A Temporary Bite-Sized Coreboot Image
+# STEP 5: Configuring A Temporary Bite-Sized coreboot Image
 
 In the Shell, switch your working directory to your newly-extracted coreboot folder.
 
 ```
-cd /home/sudo-judo/YourCorebootFolder
+cd /home/sudo-judo/yourCorebootFolder
 ```
 
 Let's build the toolchain we need for x64/x86 chips architectures:
@@ -319,7 +319,7 @@ Now, we will remove the default mainboard preset: (It is set to QEMU emulation b
 make distclean
 ```
 
-Now for the hard part, where we build our Coreboot image with all of the files we created previously. Use arrow keys to scroll, and the **"Y"** or **"N"** keys to select or deselect options.
+Now for the hard part, where we build our coreboot image with all of the files we created previously. Use arrow keys to scroll, and the **"Y"** or **"N"** keys to select or deselect options.
 
 **Where [*] is specified, the setting should be set to "Y"**
 
@@ -356,7 +356,7 @@ Save and exit. You should be sent back to the Shell. Let's assemble our config f
 make
 ```
 
-Our 1024 Kilobyte-sized Coreboot image should be built and located in /build in our Coreboot directory.
+Our 1024 Kilobyte-sized coreboot image should be built and located in /build in our coreboot directory.
 
 
 
